@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from apps.users.models import User
+
 
 class GenericResponse:
     """
@@ -43,6 +45,22 @@ class GenericResponse:
                 ),
             },
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @property
+    def expired_token(self) -> Response:
+        """
+        Method that returns an object of type Response with HTTP status
+        code 401 (Unauthorized) and a message that the request sent
+        has an expired token.
+        """
+        return Response(
+            data={
+                "response": False,
+                "message": "El token ha expirado.",
+                "token_is_expired": True,
+            },
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
     def response_involved(self, response: Response) -> Response:
@@ -126,10 +144,29 @@ class GenericResponse:
             status=status.HTTP_200_OK,
         )
 
+    def user_data(self, user: User):
+        """
+        Method that returns an object of type Response with HTTP status
+        code 200 (OK), which receives an object of type User as parameter
+        and returns the user information with the response.
+        """
+        return Response(
+            data={
+                "response": True,
+                "data": {
+                    "username": user.username,
+                    "user": f"{user.first_name} {user.last_name}",
+                    "position": user.position,
+                    "profile_image": f"{user.profile_image}",
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
     def authtoken(self, token: str):
         """
         Method that returns an object of type Response with HTTP status
-        code 201 (Created), which receives a authtentication token as a
+        code 201 (Created), which receives an authtentication token as a
         parameter and returns it with the response.
         """
         return Response(

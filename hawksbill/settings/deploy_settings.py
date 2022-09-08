@@ -46,7 +46,7 @@ CHANNEL_LAYERS = {
 # Token expiration
 # Variable that stores the seconds counted after the creation date to make the token expire.
 
-EXPIRATION_SECONDS: float = 10.0
+EXPIRATION_SECONDS: float = 900.0
 
 
 # CORS Settings

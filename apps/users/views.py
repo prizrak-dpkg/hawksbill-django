@@ -1,4 +1,5 @@
-from typing import Any, Union
+import json
+from typing import Any, Dict, Union
 from django.contrib.sessions.models import Session
 from django.db.models.query import QuerySet
 from django.utils import timezone
@@ -8,6 +9,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.hawksbillapi.helpers import GenericResponse
+from apps.hawksbillapi.mixins import AuthTokenMixin
 from apps.hawksbillapi.models import ConfirmationToken
 from apps.users.models import User
 
@@ -56,7 +58,7 @@ class LoginAPIView(ObtainAuthToken, HawksbillSessionManagement):
         else:
             return data
 
-    def login(self, request: Request) -> Response:
+    def login(self, data: Dict[str, Union[str, int, None]]) -> Response:
         """
         Method that returns an object of type Response. It uses
         the serializer provided by the ObtainAuthToken class and
@@ -64,9 +66,7 @@ class LoginAPIView(ObtainAuthToken, HawksbillSessionManagement):
         it creates a Token associated to the user and returns it
         in the response.
         """
-        login_serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        login_serializer = self.serializer_class(data=data, context={"request": data})
         if login_serializer.is_valid():
             user: User = login_serializer.validated_data["user"]
             token: Token
@@ -79,14 +79,13 @@ class LoginAPIView(ObtainAuthToken, HawksbillSessionManagement):
             return self.incorrect_credentials
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        if request.data.get("username") is not None:
-            if isinstance(request.data["username"], str):
-                request.data[
-                    "username"
-                ] = self.get_document_number_by_username_or_email(
-                    request.data["username"]
+        if request.data.get("login") is not None:
+            data: Dict[str, Union[str, int, None]] = json.loads(request.data["login"])
+            if isinstance(data["username"], str):
+                data["username"] = self.get_document_number_by_username_or_email(
+                    data["username"]
                 )
-            return self.login(request=request)
+            return self.login(data=data)
         else:
             return self.missing_http_parameters
 
@@ -131,3 +130,34 @@ class ActiveAPIView(APIView, GenericResponse):
                 return self.message_bad_request(message="El enlace ha caducado.")
         else:
             return self.missing_http_parameters
+
+
+class UserToken(APIView, GenericResponse):
+    """
+    Class that has the logic to return a user's token.
+    """
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        if request.data.get("username") is not None:
+            user: Union[User, None] = User.objects.filter(
+                username=request.data["username"]
+            ).first()
+            if user is not None:
+                token: Union[Token, None] = Token.objects.filter(user=user).first()
+                if token is not None:
+                    return self.authtoken(token=token.key)
+        return self.missing_http_parameters
+
+
+class UserData(AuthTokenMixin, APIView, GenericResponse):
+    """
+    Class that has the logic to return a user's token.
+    """
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        token: Union[Token, None] = Token.objects.filter(
+            key=self.get_key(request=request)
+        ).first()
+        if token is not None:
+            return self.user_data(user=token.user)
+        return self.missing_http_parameters

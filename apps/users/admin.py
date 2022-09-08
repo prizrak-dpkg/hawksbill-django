@@ -47,6 +47,15 @@ class UserAdmin(UserBaseAdmin, ImportExportModelAdmin, admin.ModelAdmin):
         ),
         (("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("username", "document_number", "password1", "password2"),
+            },
+        ),
+    )
     search_fields = [
         "username",
         "document_number",

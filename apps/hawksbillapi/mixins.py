@@ -36,14 +36,15 @@ class AuthTokenMixin(TokenAuthentication, GenericResponse):
 
     def authenticate_credentials(
         self, key
-    ) -> Tuple[Union[User, None], Union[Token, None], Dict[str, str]]:
+    ) -> Tuple[Union[User, None], bool, Dict[str, str]]:
         errors = {}
+        token_is_expired = False
         token: Union[Token, None] = (
             Token.objects.select_related("user").filter(key=key).first()
         )
         if token is None:
             errors.update({"token": "El token no es válido."})
-            return (None, None, errors)
+            return (None, token_is_expired, errors)
         else:
             if not token.user.is_active:
                 errors.update(
@@ -55,17 +56,21 @@ class AuthTokenMixin(TokenAuthentication, GenericResponse):
                 return (None, None, errors)
             else:
                 if self.token_expired(token=token):
-                    ...
-                return (token.user, token, errors)
+                    token_is_expired = True
+                    user: User = token.user
+                    token.delete()
+                    self.get_model().objects.create(user=user)
+                return (token.user, token_is_expired, errors)
 
     def dispatch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         key: Union[str, None] = self.get_key(request=request)
         if key is not None:
             user: Union[User, None]
-            token: Union[Token, None]
             errors: Dict[str, str]
-            user, token, errors = self.authenticate_credentials(key=key)
+            user, token_is_expired, errors = self.authenticate_credentials(key=key)
             if user is not None:
+                if token_is_expired:
+                    return self.response_involved(self.expired_token)
                 return super().dispatch(request, *args, **kwargs)
             else:
                 return self.response_involved(self.data_errors_response(errors=errors))

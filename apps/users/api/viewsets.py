@@ -1,6 +1,5 @@
 from typing import Any, Dict, Tuple, Union
 from django.db.models.query import QuerySet
-from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet

@@ -36,8 +36,7 @@ class User(AbstractUser):
     profile_image = models.ImageField(
         verbose_name="Profile image",
         upload_to="profile/",
-        blank=True,
-        null=True,
+        default="assets/images/hawksbill.png",
     )
     USERNAME_FIELD = "document_number"
     REQUIRED_FIELDS = [

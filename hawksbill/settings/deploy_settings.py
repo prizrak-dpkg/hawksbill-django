@@ -54,6 +54,7 @@ EXPIRATION_SECONDS: float = 900.0
 
 CORS_ALLOWED = [
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 CORS_ALLOWED_ORIGINS = [*CORS_ALLOWED]
@@ -66,6 +67,16 @@ CORS_ORIGIN_WHITELIST = [*CORS_ALLOWED]
 
 SWAGGER_SETTINGS = {
     "DOC_EXPANSION": "none",
+}
+
+
+# CKEditor configuration
+# https://django-ckeditor.readthedocs.io/en/latest/#optional-customizing-ckeditor-editor
+
+CKEDITOR_CONFIGS = {
+    "default": {
+        "toolbar": "full",
+    },
 }
 
 

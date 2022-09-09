@@ -10,6 +10,40 @@ from apps.clientrequests.models import *
 
 
 #   =======================   #
+#   Table name: Client   #
+#   =======================   #
+class ClientResource(resources.ModelResource):
+    class Meta:
+
+        model = Client
+        import_id_fields = ["id"]
+
+
+class ClientAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+
+    search_fields = [
+        "name",
+    ]
+
+    list_display = (
+        "id",
+        "registration_date",
+        "modification_date",
+        "status",
+        "name",
+        "logo",
+    )
+
+    resource_class = ClientResource
+
+
+admin.site.register(
+    Client,
+    ClientAdmin,
+)
+
+
+#   =======================   #
 #   Table name: RequestType   #
 #   =======================   #
 class RequestTypeResource(resources.ModelResource):
@@ -64,6 +98,7 @@ class ClientRequestAdmin(ImportExportModelAdmin, admin.ModelAdmin):
         "registration_date",
         "modification_date",
         "status",
+        "client",
         "type",
         "description",
         "applicant",

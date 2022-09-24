@@ -45,6 +45,7 @@ OWN_APPS = [
 
 THIRD_PARTY_APPS = [
     "ckeditor",
+    "channels",
     "corsheaders",
     "drf_yasg",
     "import_export",

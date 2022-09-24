@@ -26,11 +26,10 @@ class HawksbillSessionManagement(GenericResponse):
         all active user sessions.
         """
         token.delete()
-        active_sessions: QuerySet = Session.objects.filter(
+        active_sessions: QuerySet[Session] = Session.objects.filter(
             expire_date__gte=timezone.now()
         )
         for session in active_sessions:
-            session: Session
             session_data = session.get_decoded()
             if user.id == int(session_data.get("_auth_user_id")):
                 session.delete()
@@ -140,7 +139,7 @@ class UserToken(APIView, GenericResponse):
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if request.data.get("username") is not None:
             user: Union[User, None] = User.objects.filter(
-                username=request.data["username"]
+                id=request.data["username"]
             ).first()
             if user is not None:
                 token: Union[Token, None] = Token.objects.filter(user=user).first()
@@ -149,9 +148,18 @@ class UserToken(APIView, GenericResponse):
         return self.missing_http_parameters
 
 
+class TokenExpired(AuthTokenMixin, APIView, GenericResponse):
+    """
+    Class that has the logic to return if user's token is expired.
+    """
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return self.message_response("")
+
+
 class UserData(AuthTokenMixin, APIView, GenericResponse):
     """
-    Class that has the logic to return a user's token.
+    Class that has the logic to return a user's data.
     """
 
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:

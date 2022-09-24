@@ -5,6 +5,7 @@ from apps.users.views import (
     ActiveAPIView,
     UserData,
     UserToken,
+    TokenExpired,
 )
 from apps.users.api.routers import userrouters
 
@@ -16,5 +17,6 @@ urlpatterns = [
     path("active/", ActiveAPIView.as_view(), name="active"),
     path("gettoken/", UserToken.as_view(), name="gettoken"),
     path("userdata/", UserData.as_view(), name="userdata"),
+    path("token/", TokenExpired.as_view(), name="token"),
     *userrouters,
 ]

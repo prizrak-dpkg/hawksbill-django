@@ -1,10 +1,9 @@
 import re
 from re import Pattern
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, List
 from rest_framework import status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-
 from apps.users.models import User
 
 
@@ -102,7 +101,9 @@ class GenericResponse:
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    def data_response(self, data: Dict[str, Any]) -> Response:
+    def data_response(
+        self, data: Union[Dict[str, Any], List[Dict[str, Any]]]
+    ) -> Response:
         """
         Method that returns an object of type Response with HTTP status
         code 200 (OK), which receives a dictionary with the data as a parameter
@@ -154,11 +155,11 @@ class GenericResponse:
             data={
                 "response": True,
                 "data": {
-                    "username": user.username,
                     "user": f"{user.first_name} {user.last_name}",
                     "position": user.position,
                     "profile_image": f"{user.profile_image}",
                 },
+                "username": user.id,
             },
             status=status.HTTP_200_OK,
         )
@@ -205,9 +206,8 @@ class Helpers:
         Method that returns a copy of the string with leading and
         trailing whitespace and the excess whitespace between words removed.
         """
-        return " ".join(
-            list(filter(lambda char: not char == "", string.split(" ")))
-        ).strip()
+        whitespace_regex: Pattern[str] = re.compile(r"(\s)+")
+        return re.sub(whitespace_regex, " ", string).strip()
 
     class Meta:
         abstract = True
@@ -234,6 +234,19 @@ class GeneralValidations:
         it can also be an empty string.
         """
         alphabetic_regex: Pattern[str] = re.compile(r"^[a-z áéíóú]*$", re.IGNORECASE)
+        return alphabetic_regex.search(string) is not None
+
+    def validate_phrase_pattern(self, string: str) -> bool:
+        """
+        Method that validates that the string entered has only
+        alphanumeric characters, space characters between words,
+        punctuation marks (. , ; : () [] ' " ¡! ¿?) and basic
+        mathematical symbols (+ - / * =).
+        It can't be an empty string.
+        """
+        alphabetic_regex: Pattern[str] = re.compile(
+            r"^[\w.áéíóú,;: ()[\]¡!'\"¿?*/+-=]+$", re.IGNORECASE
+        )
         return alphabetic_regex.search(string) is not None
 
     def validate_email_pattern(self, email: str) -> bool:

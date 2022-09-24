@@ -58,8 +58,9 @@ urlpatterns = [
         },
     ),
     path("admin/", admin.site.urls),
-    path("api/", include("apps.users.urls")),
     path("api/", include("apps.hawksbillapi.urls")),
+    path("api/", include("apps.users.urls")),
+    path("api/", include("apps.clientrequests.urls")),
 ]
 
 handler404 = home_redirect
